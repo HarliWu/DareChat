@@ -11,7 +11,8 @@
     },
     "devDependencies": {},
     "scripts": {
-        "dev": "node app.js"
+        "dev": "node app.js",
+        "start": "node app.js"
     },
     "keywords": [
         "imChat",
