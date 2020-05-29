@@ -2,12 +2,13 @@ const express = require('express'),
   app = express(),
   server = require('http').createServer(app),
   io = require('socket.io').listen(server),
-  //用于保存用户信息的数组
-  PORT=3000,
-  users = [];
+  PORT=2000,
+  users = [],
+  idles = [];
 const log =require('./log');
+
 let kit = {
-  //判断用户是否存在
+  // check whether the user is online
   isHaveUser(user) {
     let flag = false;
     users.forEach(function (item) {
@@ -17,7 +18,7 @@ let kit = {
     })
     return flag;
   },
-  //删除某一用户
+  // delete a user
   delUser(id) {
     users.forEach(function (item, index) {
       if (item.id == id) {
@@ -41,25 +42,20 @@ let kit = {
     }
   }
 }
-//设置静态资源
+
+// Setting static 
 app.use('/static', express.static(__dirname + '/static'));
-//用户访问网站页面会根据浏览器userAgent返回不同的页面
-app.get("/", (req, res) => {
-  let userAgent = req.headers['user-agent'].toLowerCase();
-  if (kit.getDeviceType(userAgent)=='touch') {
-    let path = __dirname + '/static/iChat.html';
-    res.sendFile(path);
-  } else {
-    let path = __dirname + '/static/index.html';
-    res.sendFile(path);
-  }
+app.get("/", (req, res) => {  
+  let path = __dirname + '/static/index.html';
+  res.sendFile(path);
 })
+
 io.sockets.on('connection',(socket)=>{
-  //创建用户链接
+  // Create connection 
   socket.on('login', (user)=> {
     if (kit.isHaveUser(user)) {
-      console.log("登录失败,昵称<"+user.name+">已存在！")
-      socket.emit('loginFail', "登录失败,昵称已存在!");
+      console.log("Login failed, nickname <"+user.name+"> has been used. ")
+      socket.emit('loginFail', "Login failed, nickname has been used. ");
     } else {
       user.id = socket.id;
       user.roomId=socket.id;
@@ -69,13 +65,52 @@ io.sockets.on('connection',(socket)=>{
       user.deviceType=deviceType;
       user.loginTime=new Date().getTime();
       socket.user = user;
-      socket.emit('loginSuccess', user, users);
-      users.push(user)
+	  if (idles.length == 0) {
+		  socket.emit('loginSuccess', user, users, null);
+		  idles.push(user);
+	  }
+      else {
+		  const randomElement = idles[Math.floor(Math.random() * idles.length)];
+		  socket.emit('loginSuccess', user, users, randomElement);
+		  socket.broadcast.to(randomElement.roomId).emit('pair', user);
+		  const index = idles.indexOf(randomElement);
+		  if (index > -1) {
+		      idles.splice(index, 1);
+		  }
+		  log.logUserMessage(user, randomElement, "Pair Up");
+	  }
+      users.push(user);
       socket.broadcast.emit('system', user, 'join');
       log.logLoginMessage(user,'join');
     }
   });
-  //用户注销链接
+  
+  // Find new pair
+  socket.on('pairup', ()=> {
+	  // Check whether a user is still online
+	  if (!socket.user) {
+        from.roomId = socket.id;
+        socket.user = from;
+        users.push(from);
+        socket.broadcast.emit('system', from, 'join');
+        socket.emit('loginSuccess', from, []);
+      }
+	  if (idles.length != 0) {
+		  const randomElement = idles[Math.floor(Math.random() * idles.length)];
+		  socket.broadcast.to(randomElement.roomId).emit('pair', socket.user);
+		  socket.emit('pair', randomElement);
+		  const index = idles.indexOf(randomElement);
+		  if (index > -1) {
+			  idles.splice(index, 1);
+		  }
+		  log.logUserMessage(socket.user, randomElement, "Pair Up");	  
+	  }
+	  else {
+		  idles.push(socket.user);
+	  }
+  });
+
+  // Disconnect
   socket.on('disconnect',()=> {
     if (socket.user != null) {
       kit.delUser(socket.user.id);
@@ -83,9 +118,10 @@ io.sockets.on('connection',(socket)=>{
       log.logLoginMessage(socket.user,'logout');
     }
   });
-  //群发消息
+  
+  // Group Chat
   socket.on('groupMessage',(from, to,message,type)=>{
-    //用户登录状态掉线，重置用户登录状态
+    // Check whether a user is still online
     if (!socket.user) {
       from.roomId = socket.id;
       socket.user = from;
@@ -96,9 +132,10 @@ io.sockets.on('connection',(socket)=>{
     socket.broadcast.emit('groupMessage', socket.user, to,message,type);
     log.logUserMessage(socket.user,to,message,type)
   });
-  //发送私信
+  
+  // One-to-one chat
   socket.on('message',(from, to,message,type)=> {
-    //用户登录状态掉线，重置用户登录状态
+    // if the user disconnect, reset the connection... 
     if (!socket.user) {
       from.roomId = socket.id;
       socket.user = from;
@@ -109,19 +146,21 @@ io.sockets.on('connection',(socket)=>{
     socket.broadcast.to(to.roomId).emit('message', socket.user, to,message,type);
     log.logUserMessage(socket.user,to,message,type)
   });
-  //判断用户重新连接
+  
+  // Reconnect 
   if(socket.handshake.query.User){
     let user=JSON.parse(socket.handshake.query.User);
     socket.user = user;
     user.roomId = socket.id;
     user.address = socket.handshake.address.replace(/::ffff:/,"");
-    console.log("用户<"+user.name+">重新连接成功！")
+    console.log("User <"+user.name+"> successfully reconnect. ")
     socket.emit('loginSuccess', user, users);
     users.push(user)
     socket.broadcast.emit('system', user, 'join');
   }
 });
-//启动服务器
+
+// Start the server 
 server.listen(PORT,()=> {
-  console.log(`服务器已启动在：${PORT}端口`, `http://localhost:${PORT}`)
+  console.log(`Server is now running under Port ${PORT}. `, `http://localhost:${PORT}`)
 });

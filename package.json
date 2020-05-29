@@ -6,7 +6,8 @@
     "dependencies": {
         "express": "^4.15.3",
         "mysql": "^2.18.1",
-        "socket.io": "^2.0.1"
+        "socket.io": "^2.0.1",
+        "vue-recaptcha": "^1.3.0"
     },
     "devDependencies": {},
     "scripts": {
@@ -18,6 +19,6 @@
         "express",
         "vue"
     ],
-    "author": "@cleverqin",
+    "author": "@harliwu",
     "license": "MIT"
 }

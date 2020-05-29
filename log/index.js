@@ -7,6 +7,6 @@ module.exports ={
     }
   },
   logUserMessage(from,to,message,type){
-    console.log("\033[36m"+from.name+"\033[0m对<\033[36m"+to.name+"\033[0m>:\033[32m"+message+"\033[0m")
+    console.log("\033[36m"+from.name+"\033[0m send <\033[36m"+to.name+"\033[0m>:\033[32m"+message+"\033[0m")
   }
 }

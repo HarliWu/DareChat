@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>欢迎使用webTalk聊天应用</title>
+  <title>Chatting with stranger</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="description" content="">
   <meta name="keywords" content="">
@@ -11,6 +11,13 @@
   <link rel="stylesheet" href="//at.alicdn.com/t/font_737314_ykp1exp92.css">
   <link rel="stylesheet" href="/static/css/ui-player.css">
   <link rel="stylesheet" href="/static/css/webChat.css">
+  <script>
+	function validate(event) {
+      event.preventDefault();
+	  grecaptcha.execute();
+    }
+  </script>
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>
 <div id="app"></div>
@@ -23,40 +30,40 @@
           <img :src="loginUser.avatarUrl" alt="">
         </div>
         <ul class="webTalk-menu-list">
-          <li class="webTalk-menu-item" title="会话" :class="{active:menu=='chat'}">
+          <li class="webTalk-menu-item" title="Chat" :class="{active:menu=='chat'}">
             <span class="iconfont icon-comments" @click="menu='chat'"></span>
           </li>
-          <li class="webTalk-menu-item" title="设置" :class="{active:menu=='setting'}">
+          <li class="webTalk-menu-item" title="Setting" :class="{active:menu=='setting'}">
             <span class="iconfont icon-cog" @click="menu='setting'"></span>
           </li>
-          <li class="webTalk-menu-item" title="关于" :class="{active:menu=='about'}">
-            <span class="iconfont icon-info" @click="menu='about'"></span>
-          </li>
+          <!-- <li class="webTalk-menu-item" title="About" :class="{active:menu=='about'}"> -->
+            <!-- <span class="iconfont icon-info" @click="menu='about'"></span> -->
+          <!-- </li> -->
         </ul>
       </div>
       <div class="webTalk-container">
         <div class="webTalk-panel" v-show="menu=='chat'">
-          <div class="webTalk-panel-left">
-            <div class="webTalk-search">
-              <span class="iconfont icon-search"></span>
-              <input type="text" class="webTalk-search-input" placeholder="搜索" v-model="keyWord">
-            </div>
-            <div class="webTalk-users-list">
-              <div class="webTalk-users-listPanel ui-scroll">
-                <user :user="item"
-                      :messages="threads[item.id]?threads[item.id]:[]"
-                      :setting="setting"
-                      v-for="item in searchUser()"
-                      @click.native="changeChannel(item)"
-                      :class="{active:threadId==item.id}"></user>
-                <div class="webTalk-no-user" v-if="searchUser()==0">未查到相关数据</div>
-              </div>
-            </div>
-          </div>
-          <div class="webTalk-panel-right">
+          <!-- <div class="webTalk-panel-left" style="width=0px"> -->
+            <!-- <div class="webTalk-search"> -->
+              <!-- <span class="iconfont icon-search"></span> -->
+              <!-- <input type="text" class="webTalk-search-input" placeholder="Search" v-model="keyWord"> -->
+            <!-- </div> -->
+            <!-- <div class="webTalk-users-list"> -->
+              <!-- <div class="webTalk-users-listPanel ui-scroll"> -->
+                <!-- <user :user="item" -->
+                      <!-- :messages="threads[item.id]?threads[item.id]:[]" -->
+                      <!-- :setting="setting" -->
+                      <!-- v-for="item in searchUser()" -->
+                      <!-- @click.native="changeChannel(item)" -->
+                      <!-- :class="{active:threadId==item.id}"></user> -->
+                <!-- <div class="webTalk-no-user" v-if="searchUser()==0">Search nothing...</div> -->
+              <!-- </div> -->
+            <!-- </div> -->
+          <!-- </div> -->
+          <div class="webTalk-panel-right" style="margin:0px">
             <div class="webTalk-message-container" v-show="channel.id">
               <div class="webTalk-title">
-                <h3 class="webTalk-title-text">{{channel.name}} <template v-if="channel.type=='room'">（{{onLineUsers.length}}）</template></h3>
+                <h3 class="webTalk-title-text" style="text-align:center">{{channel.name}} <template v-if="channel.type=='room'">({{onLineUsers.length}})</template></h3>
               </div>
               <div class="webTalk-message-box">
                 <div class="webTalk-message-list ui-scroll" ref="messageList">
@@ -68,10 +75,10 @@
                   <expression @picker-expression="pickerExpression"></expression>
                 </div>
                 <div class="webTalk-message-inputBox">
-                  <textarea class="webTalk-message-input ui-scroll" v-model="text" placeholder="请输入要说的话..." @keyup.enter="send(text)"></textarea>
+                  <textarea class="webTalk-message-input ui-scroll" v-model="text" placeholder="Type something..." @keyup.enter="send(text)"></textarea>
                 </div>
                 <div class="webTalk-sendBtn-box">
-                  <button class="webTalk-sendBtn" @click="send(text)">发送</button>
+                  <button class="webTalk-sendBtn" @click="send(text)">Send</button>
                 </div>
               </div>
             </div>
@@ -82,7 +89,7 @@
         </div>
         <div class="webTalk-panel" v-show="menu=='setting'">
           <div class="webTalk-setting-box">
-            <div class="webTalk-setting-header">设置</div>
+            <div class="webTalk-setting-header">Setting</div>
             <ul class="webTalk-setting-list">
               <li >
                 <div class="webTalk-info-row">
@@ -96,44 +103,22 @@
                   </div>
                 </div>
               </li>
-              <li><input type="checkbox" v-model="setting.isVoice"><span>消息提示音</span></li>
-              <li><input type="checkbox" v-model="setting.isTime"><span>显示消息时间</span></li>
-              <li><input type="checkbox" v-model="setting.isName"><span>显示用户名称</span></li>
-              <li><input type="checkbox" v-model="setting.isCMD"><span>音乐远程CMD模式</span></li>
-            </ul>
-          </div>
-        </div>
-        <div class="webTalk-panel" v-show="menu=='about'">
-          <div class="webTalk-about-box">
-            <div class="webTalk-about-header">关于</div>
-            <ul class="webTalk-about-list">
-              <li><span>版本：v1.0</span></li>
-              <li><span>协议：MIT</span></li>
-              <li><span>GitHub：<a :href="author.repositoriesUrl" target="_blank">{{author.repositoriesUrl}}</a></span></li>
-              <li><span>邮箱：{{author.email}}</span></li>
-              <li>
-                  <span class="">
-                    <a :href="author.repositoriesUrl" target="_blank">
-                      <img :src="'https://img.shields.io/github/stars/'+author.userName+'/'+author.repositoriesName+'?label=Star&amp;style=flat&amp;logo=github'" alt="" style="vertical-align: middle;">
-                    </a>
-                    <a :href="author.repositoriesUrl" target="_blank">
-                      <img :src="'https://img.shields.io/github/forks/'+author.userName+'/'+author.repositoriesName+'?label=Fork&amp;style=flat&amp;logo=github'" alt="" style="vertical-align: middle;">
-                    </a>
-                  </span>
-              </li>
+              <li><input type="checkbox" v-model="setting.isVoice"><span>Notification</span></li>
+              <li><input type="checkbox" v-model="setting.isTime"><span>Show Time</span></li>
+              <li><input type="checkbox" v-model="setting.isName"><span>Show User Name</span></li>
             </ul>
           </div>
         </div>
         <span class="webTalk-connect-status iconfont icon-wifi"
               :class="{'webTalk-connect-fail':!isOnline}"
               @click.stop="isShowLog=true"
-              :title="isOnline?'在线':'离线'"></span>
+              :title="isOnline?'Online':'Offline'"></span>
       </div>
       <div class="webTalk-flip">
         <transition name="flip">
           <div class="webTalk-logBox" v-show="isShowLog">
             <div class="webTalk-logHeader">
-              连接日志
+              Connection Log
               <span class="webTalk-log-closeBtn iconfont icon-close" @click.stop="isShowLog=false"></span>
             </div>
             <div class="webTalk-log-container" @click.stop="">
@@ -149,8 +134,7 @@
       </div>
       <audio src="/static/images/8400.mp3"></audio>
     </div>
-    <a-player  :auto-play="false" ref="player"></a-player>
-    <div class="wChat-copyright">CopyRight Power By CleverQin ©2019</div>
+    <div class="wChat-copyright">CopyRight ©2020 By Harli Wu </div>
   </section>
 </template>
 <template id="message">
@@ -213,17 +197,15 @@
   </div>
 </template>
 <template id="login">
+  
   <div class="webTalk-loginBox">
     <div class="webTalk-loginBanner"></div>
     <div class="webTalk-loginForm-box">
       <form class="webTalk-login-form">
-        <div class="webTalk-user-avatarBox">
+        <div class="webTalk-user-avatarBox" style="margin-top:3px; margin-left:-8px">
           <img :src="user.avatarUrl" alt="" @click.stop="isShow=!isShow">
           <transition name="slider">
             <div class="webTalk-select-imgBox" v-show="isShow">
-              <div class="webTalk-addAvatar-box">
-                <input type="text" v-model="QQ" placeholder="输入QQ号添加使用QQ头像" @click.stop="" @keyup.enter="addQQAvatar(QQ)">
-              </div>
               <ul class="webTalk-avatar-list">
                 <li :class="{active:user.avatarUrl==item}" v-for="item in avatars">
                   <img :src="item" alt="" @click="user.avatarUrl=item">
@@ -233,9 +215,9 @@
           </transition>
         </div>
         <div class="webTalk-form-inputBox">
-          <input type="text" class="webTalk-user-name" placeholder="用户名" v-model="user.name">
-          <input type="text" class="webTalk-user-password" placeholder="密码">
-          <button type="button" class="webTalk-formBtn" @click="login(user)">登录</button>
+          <input type="text" class="webTalk-user-name" placeholder="User Name" v-model="user.name">
+		  <div id='recaptcha' class="g-recaptcha" data-sitekey="6Le8if0UAAAAAMWZyo8betiHiGF981umCq-zs2b7" data-callback="onSubmit" data-size="invisible"></div>
+          <button type="button" class="webTalk-formBtn" onclick="validate" @click='login(user)'>Login</button>
         </div>
       </form>
     </div>

@@ -135,6 +135,7 @@
     item.url=baseUrl+item.url;
     arr.push(item);
   });
+  
   Vue.prototype.$parserExpression=(text)=>{
     const getIndex=(title)=>{
       let index=-1;
@@ -163,6 +164,7 @@
     template:"#message",
     props:["message","loginUser",'setting']
   });
+  
   Vue.component("user",{
     template: "#user",
     props: ["messages","user","setting"],
@@ -189,6 +191,7 @@
       }
     }
   });
+  
   Vue.component("expression",{
     template:"#expression",
     data(){
@@ -230,6 +233,7 @@
     let s=time.getSeconds();
     return two(hour)+":"+two(m)+":"+two(s);
   })
+  
   Vue.component('login',{
     template:"#login",
     data(){
@@ -247,7 +251,6 @@
           'http://q.qlogo.cn/headimg_dl?dst_uin=1741841217&spec=100',
           'http://q.qlogo.cn/headimg_dl?dst_uin=157509895&spec=100',
           'http://q.qlogo.cn/headimg_dl?dst_uin=453079985&spec=100',
-          'http://q.qlogo.cn/headimg_dl?dst_uin=753678776&spec=100',
         ],
         QQ:"",
         isShow:false,
@@ -258,7 +261,10 @@
       document.addEventListener('click',(e)=>{
         _this.isShow=false;
       })
-      _this.user.name=_this.randomText();
+      // _this.user.name=_this.randomText();
+	  for (let i = 0; i < 4; i++) {
+		  _this.addQQAvatar(_this.randomQQ());
+	  }
       let QQ=_this.randomQQ();
       let url="http://q.qlogo.cn/headimg_dl?dst_uin=" + QQ + "&spec=100";
       _this.addQQAvatar(QQ);
@@ -274,10 +280,10 @@
           }
           this.QQ=""
         }else {
-          console.log("请输入正确的QQ号！")
+          console.log("Please type correct QQ account. ")
           this.$alterMessage({
             type:'info',
-            text: "请输入正确的QQ号！"
+            text: "Please type correct QQ account. "
           })
         }
       },
@@ -300,6 +306,7 @@
       }
     }
   });
+  
   let message={
     install(Vue){
       function _extend(opt,option) {
@@ -346,6 +353,7 @@
   }
   Vue.use(message);
 })(Vue)
+
 new Vue({
   el:"#app",
   template:"#tpl",
@@ -353,7 +361,7 @@ new Vue({
     return {
       threads:{},
       loginUser:{
-        name:"似水流年",
+        name:"",
         avatarUrl:"http://q.qlogo.cn/headimg_dl?dst_uin=705597001&spec=100",
         type:"user"
       },
@@ -361,7 +369,7 @@ new Vue({
         {
           id: "group",
           avatarUrl: "http://148.70.90.247/static/images/group-icon.png",
-          name: "聊天室群",
+          name: "Group Chat",
           type: "room"
         }
       ],
@@ -380,10 +388,7 @@ new Vue({
       isShowLog:false,
       keyWord:"",
       author:{
-        email:"705597001@qq.com",
-        repositoriesUrl:"https://github.com/cleverqin/node-websocket-Chatroom",
-        userName:"cleverqin",
-        repositoriesName:"node-websocket-Chatroom"
+        userName:"harliwu",
       }
     }
   },
@@ -504,7 +509,8 @@ new Vue({
           case "logout":
             _this.removeUser(user);
             if(user.id==_this.threadId){
-              document.title="欢迎使用webTalk聊天应用！"
+              document.title="Chatting with stranger";
+			  _this.socket.emit("pairup");
             }
             break;
           default:
@@ -512,58 +518,63 @@ new Vue({
         }
       })
       _this.socket.on("error",(error)=>{
-        console.log("出错了！！")
-        _this.saveLog("socket链接出错了！"+JSON.stringify(error),"error");
+        console.log("Error...")
+        _this.saveLog("Socket error... "+JSON.stringify(error),"error");
       })
       _this.socket.on("connect",(data)=>{
-        console.log("链接成功！",data)
-        _this.saveLog("连接成功！"+JSON.stringify(data),"success");
+        console.log("Success... ",data)
+        _this.saveLog("Connection success... "+JSON.stringify(data),"success");
         _this.isOnline=true;
       })
       _this.socket.on("disconnect",(data)=>{
         _this.isOnline=false;
         console.log(JSON.stringify(data)+ ' - disconnect');
-        _this.saveLog("断开连接！"+JSON.stringify(data)+ ' - disconnect',"warning");
+        _this.saveLog("Disconnect... "+JSON.stringify(data)+ ' - disconnect',"warning");
       })
       _this.socket.on("connect_error",(data)=>{
         _this.isOnline=false;
         console.log(JSON.stringify(data)+ ' - connect_error')
-        _this.saveLog("连接出错了！"+JSON.stringify(data)+ ' - connect_error',"error");
+        _this.saveLog("Connect error... "+JSON.stringify(data)+ ' - connect_error',"error");
       })
       _this.socket.on("connect_timeout",(data)=>{
         _this.isOnline=false;
         console.log(JSON.stringify(data)+ ' - connect_timeout')
-        _this.saveLog("连接超时！"+JSON.stringify(data)+ ' - connect_timeout',"warning");
+        _this.saveLog("Timeout... "+JSON.stringify(data)+ ' - connect_timeout',"warning");
       })
       _this.socket.on("reconnect",(data)=>{
         console.log(JSON.stringify(data)+ ' - reconnect')
-        _this.saveLog("重新连接！"+JSON.stringify(data)+ ' - reconnect',"info");
+        _this.saveLog("Reconnect... "+JSON.stringify(data)+ ' - reconnect',"info");
       })
       _this.socket.on("reconnect_attempt",(data)=>{
         _this.socket.io.opts.query={
           User:_this.loginUser.id?JSON.stringify(_this.loginUser):''
         }
-        _this.saveLog("尝试重新连接！"+JSON.stringify(data)+ ' - reconnect_attempt',"info");
+        _this.saveLog("Reconnect Attempt... "+JSON.stringify(data)+ ' - reconnect_attempt',"info");
       })
-      _this.socket.on("loginSuccess",(user,users)=>{
+      _this.socket.on("loginSuccess",(user,users, dest)=>{
         _this.loginUser=user;
         if(users.length>0){
           _this.onLineUsers=[].concat([_this.onLineUsers[0]],users);
         }
+		if (dest != null) {
+			_this.changeChannel(dest);
+		}
       })
       _this.socket.on("loginFail",(message)=>{
         _this.$alterMessage({
           type:"warning",
           text:message
         })
-
       })
+	  _this.socket.on("pair", (dest) => {
+		  _this.changeChannel(dest);
+	  })
     },
     changeChannel(user){
       this.threadId=user.id;
       this.setChannelReader(user.id);
       this.scrollFooter();
-      document.querySelector("title").innerHTML = this.loginUser.name + " | 与" + user.name + "聊天中";
+      document.querySelector("title").innerHTML = this.loginUser.name + " | chatting with " + user.name;
     },
     send(text){
       if(text.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '')==''){
@@ -627,7 +638,7 @@ new Vue({
       if(user.name==""){
         this.$alterMessage({
           type:"warning",
-          text:"请输入用户名！"
+          text:"Please input username. "
         })
       }else {
         this.socket.emit("login",user);
