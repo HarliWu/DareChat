@@ -290,11 +290,6 @@
       login(user){
         this.$emit("login",user)
       },
-      randomText() {
-        let word=new randomName().randomName();
-        console.log(word);
-        return word;
-      },
       randomQQ(){
         let num=parseInt(Math.random()*3+6);
         let firstNum=parseInt(Math.random()*9+1);
@@ -373,11 +368,11 @@ new Vue({
           type: "room"
         }
       ],
-      threadId:"",
+      threadId:null,
       setting:{
         isVoice:true,
-        isTime:true,
-        isName:true,
+        isTime:false,
+        isName:false,
         isCMD:true
       },
       socket:null,
@@ -499,7 +494,7 @@ new Vue({
       })
       _this.socket.on("groupMessage",(from,to,message,type)=>{
         _this.receiveMessage(from,to,message,type)
-        _this.cmd(message);
+        // _this.cmd(message);
       })
       _this.socket.on("system",(user,type)=>{
         switch (type) {
@@ -509,8 +504,9 @@ new Vue({
           case "logout":
             _this.removeUser(user);
             if(user.id==_this.threadId){
-              document.title="Chatting with stranger";
-			  _this.socket.emit("pairup");
+              document.title="DareChat: Chatting with stranger";
+			  this.threadId = null;
+			  _this.socket.emit("pairup", this.loginUser, null);
             }
             break;
           default:
@@ -553,9 +549,11 @@ new Vue({
       })
       _this.socket.on("loginSuccess",(user,users, dest)=>{
         _this.loginUser=user;
+		console.log(users);
         if(users.length>0){
           _this.onLineUsers=[].concat([_this.onLineUsers[0]],users);
         }
+		// console.log(dest);
 		if (dest != null) {
 			_this.changeChannel(dest);
 		}
@@ -576,6 +574,10 @@ new Vue({
       this.scrollFooter();
       document.querySelector("title").innerHTML = this.loginUser.name + " | chatting with " + user.name;
     },
+	changeFriend() {
+		console.log(this.threadId);
+		this.socket.emit("pairup", this.loginUser, this.threadId);
+	},
     send(text){
       if(text.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, '')==''){
         this.text="";
@@ -652,8 +654,8 @@ new Vue({
         }
       })
       return arr;
-    },
-    initBg:function () {
+    }, 
+	initBg:function () {
       this.$http.jsonp("https://api.asilu.com/bg/").then(function (response) {
         let images=response.body.images,
           len=images.length;
@@ -666,30 +668,6 @@ new Vue({
           img.src=images[index].url;
         },30000)
       })
-    },
-    cmd(text){
-      let name=this.loginUser.name;
-      let cmds=["@"+name+":播放音乐","@"+name+":暂停播放","@"+name+":上一曲","@"+name+":下一曲"];
-      let index=cmds.indexOf(text.replace(/^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g, ''));
-      let $player=this.$refs["player"];
-      if($player){
-        switch (index) {
-          case 0:
-            $player.audio.play();
-            break;
-          case 1:
-            $player.audio.pause();
-            break;
-          case 2:
-            $player.prev();
-            break;
-          case 3:
-            $player.next();
-            break;
-          default:
-            return;
-        }
-      }
     }
   }
 })

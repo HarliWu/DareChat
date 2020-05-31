@@ -4,7 +4,8 @@ const express = require('express'),
   io = require('socket.io').listen(server),
   PORT= process.env.PORT || 2000,
   users = [],
-  idles = [];
+  idles = [],
+  blacklist = {};
 const log =require('./log');
 
 let kit = {
@@ -24,7 +25,31 @@ let kit = {
       if (item.id == id) {
         users.splice(index, 1);
       }
-    })
+    });
+	idles.forEach(function (item, index) {
+      if (item.id == id) {
+        idles.splice(index, 1);
+      }
+    });
+	delete blacklist[id];
+  },
+  // find a user 
+  findUser(id) {
+	for (let item of users) {
+		if (item.id == id) {
+			return item;
+		}
+	}
+  },
+  // find idle users 
+  findIdles(user) {
+	  for (const [index, item] of idles.entries()) {
+		  if (!blacklist[item.id].includes(user.id) && item.id != user.id) {
+			  idles.splice(index, 1);
+			  return item;
+		  }
+	  }
+	  return null;
   },
   getDeviceType(userAgent){
     let bIsIpad = userAgent.match(/ipad/i) == "ipad";
@@ -80,33 +105,59 @@ io.sockets.on('connection',(socket)=>{
 		  log.logUserMessage(user, randomElement, "Pair Up");
 	  }
       users.push(user);
+	  blacklist[user.id] = [];
       socket.broadcast.emit('system', user, 'join');
       log.logLoginMessage(user,'join');
     }
   });
   
   // Find new pair
-  socket.on('pairup', ()=> {
+  socket.on('pairup', (from, to)=> {
 	  // Check whether a user is still online
 	  if (!socket.user) {
         from.roomId = socket.id;
         socket.user = from;
         users.push(from);
+		blacklist[from.id] = [];
         socket.broadcast.emit('system', from, 'join');
         socket.emit('loginSuccess', from, []);
       }
-	  if (idles.length != 0) {
-		  const randomElement = idles[Math.floor(Math.random() * idles.length)];
-		  socket.broadcast.to(randomElement.roomId).emit('pair', socket.user);
-		  socket.emit('pair', randomElement);
-		  const index = idles.indexOf(randomElement);
-		  if (index > -1) {
-			  idles.splice(index, 1);
+	  if (to != null) {
+		  // console.log("2");
+		  const userA = socket.user;
+		  const userB = kit.findUser(to);
+		  // console.log(userA);
+		  // console.log(userB);
+		  blacklist[userA.id].push(userB.id);
+		  blacklist[userB.id].push(userA.id);
+		  socket.emit('system', userB, 'logout');
+		  socket.broadcast.to(userB.roomId).emit('system', userA, 'logout');
+		  var idle = kit.findIdles(userA);
+		  if (idle == null) {
+			  idles.push(userA);
+		  } else {
+			  socket.emit('pair', idle);
+			  socket.broadcast.to(idle.roomId).emit('pair', userA);
+			  log.logUserMessage(idle, userA, "Pair Up");	
 		  }
-		  log.logUserMessage(socket.user, randomElement, "Pair Up");	  
-	  }
-	  else {
-		  idles.push(socket.user);
+		  idle = kit.findIdles(userB);
+		  if (idle == null) {
+			  idles.push(userB);
+		  } else {
+			  socket.broadcast.to(userB.roomId).emit('pair', idle);
+			  socket.broadcast.to(idle.roomId).emit('pair', userB);
+			  log.logUserMessage(idle, userB, "Pair Up");	
+		  }
+	  } else {
+		  const userA = socket.user;
+		  var idle = kit.findIdles(userA);
+		  if (idle == null) {
+			  idles.push(userA);
+		  } else {
+			  socket.emit('pair', idle);
+			  socket.broadcast.to(idle.roomId).emit('pair', userA);
+			  log.logUserMessage(idle, userA, "Pair Up");	
+		  }
 	  }
   });
 
@@ -126,6 +177,7 @@ io.sockets.on('connection',(socket)=>{
       from.roomId = socket.id;
       socket.user = from;
       users.push(from);
+	  blacklist[from.id] = [];
       socket.broadcast.emit('system', from, 'join');
       socket.emit('loginSuccess', from, []);
     }
@@ -140,6 +192,7 @@ io.sockets.on('connection',(socket)=>{
       from.roomId = socket.id;
       socket.user = from;
       users.push(from);
+	  blacklist[from.id] = [];
       socket.broadcast.emit('system', from, 'join');
       socket.emit('loginSuccess', from, []);
     }
@@ -155,7 +208,8 @@ io.sockets.on('connection',(socket)=>{
     user.address = socket.handshake.address.replace(/::ffff:/,"");
     console.log("User <"+user.name+"> successfully reconnect. ")
     socket.emit('loginSuccess', user, users);
-    users.push(user)
+    users.push(user);
+	blacklist[user.id] = [];
     socket.broadcast.emit('system', user, 'join');
   }
 });

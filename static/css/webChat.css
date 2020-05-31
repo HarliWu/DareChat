@@ -256,7 +256,8 @@ body,html{
     cursor: pointer;
     outline: none;
 }
-/*******消息气泡样式*******/
+
+/*******message bubble*******/
 .webTalk-message-item:after{
     display: block;
     content: "";
@@ -354,7 +355,8 @@ body,html{
     border-bottom: 5px solid transparent;
     top:15px;
 }
-/*******用户列表样式*********/
+
+/*******user list*********/
 .webTalk-users-item{
     padding: 10px;
     cursor: pointer;
@@ -453,7 +455,8 @@ body,html{
     color: #a2adb9;
     line-height: 30px;
 }
-/********表情插件样式***********/
+
+/********face mode***********/
 .webTalk-expression{
     display: block;
     width: 30px;
@@ -498,19 +501,16 @@ body,html{
     height: 100%;
     user-select: none;
 }
-/*定义滚动条宽高及背景，宽高分别对应横竖滚动条的尺寸*/
 .ui-scroll::-webkit-scrollbar{
     width: 5px;
     height: 5px;
     background-color: rgba(255, 255, 255, 0);
 }
-/*定义滚动条的轨道，内阴影及圆角*/
 .ui-scroll::-webkit-scrollbar-track{
     -webkit-box-shadow: inset 0 0 6px rgba(240, 240, 240, 0);
     border-radius: 10px;
     background-color: rgba(0, 89, 255, 0);
 }
-/*定义滑块，内阴影及圆角*/
 .ui-scroll:hover::-webkit-scrollbar-thumb{
     /*width: 10px;*/
     height: 20px;
@@ -519,7 +519,8 @@ body,html{
     background-color: rgba(203, 203, 203, 0.54);
     transition: all 0.5s;
 }
-/************连接日志样式*************/
+
+/************Connection log*************/
 .webTalk-logBox{
     position: fixed;
     width: 600px;
@@ -587,7 +588,8 @@ body,html{
 .webTalk-log-error{
     color: #ff3d46;
 }
-/********设置样式*********/
+
+/********Setting*********/
 .webTalk-setting-header,.webTalk-about-header{
     line-height: 40px;
     height: 40px;
@@ -685,7 +687,8 @@ body,html{
     z-index: 999;
     transform: translateX(-50%) translateY(0);
 }
-/*******CSS动画***********/
+
+/*******CSS animation***********/
 .slider-enter-active, .slider-leave-active {
     transition: all .5s;
 }
@@ -719,7 +722,8 @@ body,html{
     opacity: 0;
     transform: rotateX(-75deg);
 }
-/*******登录样式*********/
+
+/*******login*********/
 .webTalk-loginBox{
     position: fixed;
     width: 380px;

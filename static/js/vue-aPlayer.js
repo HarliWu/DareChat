@@ -22,7 +22,7 @@
     getLrc:function(url, callback) {
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
-        if(xhr.readyState != 4 ) return; // 4 表示数据发送完毕
+        if(xhr.readyState != 4 ) return; 
         if(xhr.status == 200) {
           var rsp = xhr.responseText;
           callback(rsp);
@@ -41,7 +41,7 @@
         })
         _this.initEvent();
       }else {
-        this.opt.el.innerHTML="<div class='ui-lrcBox'><ul><li>未查到相关歌词</li></ul></div>";
+        this.opt.el.innerHTML="<div class='ui-lrcBox'><ul><li>Cannot find any lyrics. </li></ul></div>";
       }
     },
     parseLrc:function (lrcStr) {
