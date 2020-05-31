@@ -39,16 +39,3 @@ WebChat聊天室是一个基于nodejs+express+socket.io模块构建的
 2. 使用’npm install‘安装项目依赖模块
 3. 使用’npm run dev‘启动服务
 4. 最后打开浏览器访问 `http://localhost:3000`
-
-项目预览截图
----
-<img src='./static/images/screenshot/screen_01.png' width='400px'>
-
-<img src='./static/images/screenshot/screen_02.png' width='400px'>
-
-<img src='./static/images/screenshot/screen_03.png' width='400px'>
-
-<img src='./static/images/screenshot/screen_04.png' width='400px'>
-
-<img src='./static/images/screenshot/screen_05.png' width='400px'>
-
