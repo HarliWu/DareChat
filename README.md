@@ -3,10 +3,6 @@ DareChat
 
 Our online chatroom is built with three modules – node.js, express.js and socket.io. I use Vue.js framework for the frontend. In terms of server side, I leverage express.js for the web service while socket.io to create the communication between the client and the server to achieve fundamental chatting functions. 
 
-![](https://img.shields.io/github/stars/cleverqin/node-websocket-Chatroom?label=Star&style=flat&logo=github)
-![](https://img.shields.io/github/forks/cleverqin/node-websocket-Chatroom?label=Fork&style=flat&logo=github)
-![](https://img.shields.io/badge/Version-1.0.0-blue)
-
 Functionality 
 ---
 [✔]Random pair up 
