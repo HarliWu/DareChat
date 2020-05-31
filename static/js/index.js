@@ -621,7 +621,8 @@ new Vue({
       }
     },
     playMessageVoice(tidings){
-      if(tidings.theadId!=this.threadId&&this.setting.isVoice&&tidings.to.type!=="room"&&tidings.from.id!=this.loginUser.id){
+		//tidings.theadId!=this.threadId&&
+      if(!document.hasFocus()&&this.setting.isVoice&&tidings.to.type!=="room"&&tidings.from.id!=this.loginUser.id){
         let audio=this.$el.querySelector("audio");
         if(audio){
           audio.play();
